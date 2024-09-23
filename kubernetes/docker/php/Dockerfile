@@ -1,0 +1,127 @@
+# Usage
+# docker build -f Dockerfile -t haonh87/laravel:php8.2 .
+# docker build -f Dockerfile --build-arg PHP_VERSION=8.2 --build-arg ALPINE_VERSION=3.19 -t haonh87/php:8.2-fpm .
+
+
+ARG PHP_VERSION=8.2
+ARG ALPINE_VERSION=3.19
+
+FROM php:${PHP_VERSION}-fpm-alpine${ALPINE_VERSION}
+
+LABEL maintainer="Hao Nguyen <haonh.87@gmail.com>"
+LABEL description="php-fpm alpine"
+
+
+
+ENV PHP_VERSION=${PHP_VERSION}
+# Extract the major version like "8" from "8.2
+ENV PHP_SHORT_VERSION=${PHP_VERSION%%.*}
+
+# # #
+# Proper iconv #240
+#   Ref: https://github.com/docker-library/php/issues/240
+# # #
+ENV LD_PRELOAD/usr/lib/preloadable_libiconv.so php
+RUN apk add --no-cache --repository http://dl-3.alpinelinux.org/alpine/edge/community gnu-libiconv
+
+# # #
+# INSTALL SYSTEM DEPENDENCES
+# # #
+RUN apk update && apk upgrade && \
+    apk add --no-cache wget curl ca-certificates gcc \
+    tzdata \
+    s6 ssmtp \
+    bash \
+    linux-headers \
+    icu-dev \
+    libpng-dev \
+    libjpeg-turbo-dev \
+    libwebp-dev \
+    libxpm-dev \
+    libzip-dev \
+    oniguruma-dev \
+    libxml2-dev \
+    g++ \
+    make \
+    cmake \
+    autoconf \
+    openssl-dev \
+    postgresql-dev \
+    bzip2-dev \
+    imagemagick-dev \
+    libmcrypt-dev \
+    gmp-dev \
+    libxslt-dev \
+    zlib-dev \
+    supervisor \
+    && \
+    # folders
+    mkdir -p /var/log/supervisor
+
+
+# # #
+# PHP EXTENSIONS
+# # #
+RUN docker-php-ext-configure gd --with-jpeg --with-webp \
+    && docker-php-ext-install -j$(nproc) gd \
+    intl \
+    zip \
+    pdo \
+    pdo_mysql \
+    pdo_pgsql \
+    pgsql \
+    mbstring \
+    exif
+
+RUN docker-php-ext-configure gd --with-jpeg --with-webp \
+    && docker-php-ext-install -j$(nproc) gmp \
+    pcntl \
+    bcmath
+
+RUN docker-php-ext-configure gd --with-jpeg --with-webp \
+    && docker-php-ext-install -j$(nproc) xsl
+
+RUN docker-php-ext-configure gd --with-jpeg --with-webp \
+    && docker-php-ext-install -j$(nproc) opcache
+
+RUN docker-php-ext-configure gd --with-jpeg --with-webp \
+    && docker-php-ext-install -j$(nproc) bz2
+
+RUN docker-php-ext-configure gd --with-jpeg --with-webp \
+    && docker-php-ext-install -j$(nproc) session
+    
+
+RUN apk update && apk upgrade && \
+    apk add --no-cache linux-headers \
+    && docker-php-ext-install sockets \
+    && docker-php-ext-enable sockets \
+    && pecl install imagick \
+    && docker-php-ext-enable imagick \
+    && pecl install mcrypt \
+    && docker-php-ext-enable mcrypt
+
+# # #
+#  INSTALL COMPOSER
+# # #
+COPY ./install-composer.sh /tmp
+RUN chmod +x /tmp/install-composer.sh && sh /tmp/install-composer.sh
+    
+# # #
+# SUPERVISOR CONFIGURATION
+# # #
+COPY configs/supervisord/supervisord.conf /etc/supervisor/conf.d/supervisord.conf
+
+# SETUP DOCUMENT ROOT
+RUN mkdir -p /var/www/html
+
+
+# EXPOSE PORTS!
+EXPOSE 9000
+
+# SET THE WORK DIRECTORY.
+WORKDIR /var/www
+
+# # #
+# CMD
+# # #
+CMD ["/usr/bin/supervisord", "-n -c", "/etc/supervisor/supervisord.conf"]
