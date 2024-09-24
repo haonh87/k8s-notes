@@ -4,15 +4,12 @@
 #
 echo "[TASK 1] Update /etc/hosts file"
 cat >>/etc/hosts<<EOF
-192.168.201.155  load-balancer hub.df.ggg.com.vn
+192.168.201.49  load-balancer hub.df.ggg.com.vn
 192.168.201.154  master-node-1
-192.168.201.49   master-node-2
-192.168.201.46   worker-node-1
-192.168.201.47   worker-node-2
-192.168.201.160  worker-node-3
-192.168.201.160  grafana.df.ggg.com.vn
-192.168.201.160  jenkins.df.ggg.com.vn
-192.168.201.160  rancher.df.ggg.com.vn  
+192.168.201.160  master-node-2
+192.168.201.45   worker-node-1
+192.168.201.158  worker-node-2
+192.168.201.132  worker-node-3
 EOF
 
 echo "[TASK 2] Install HAProxy"
@@ -31,8 +28,8 @@ backend kubernetes-backend
     mode tcp
     option tcp-check
     balance roundrobin
-    server kmaster1 master-node-1:6443 check fall 3 rise 2
-    server kmaster2 master-node-2:6443 check fall 3 rise 2
+    server master-node-1 master-node-1:6443 check fall 3 rise 2
+    server master-node-2 master-node-2:6443 check fall 3 rise 2
 EOF
 
 echo "[TASK 4] Restart HAProxy service"

@@ -6,6 +6,14 @@
 ## If you use a different version of Ubuntu or a different Ubuntu Vagrant box test this again
 #
 
+#!/bin/bash
+
+## !IMPORTANT ##
+#
+## This script is tested only in the generic/ubuntu2204 Vagrant box
+## If you use a different version of Ubuntu or a different Ubuntu Vagrant box test this again
+#
+
 echo "[TASK 1] Disable and turn off SWAP"
 sed -i '/swap/d' /etc/fstab
 swapoff -a
@@ -46,11 +54,8 @@ systemctl restart containerd
 systemctl enable containerd >/dev/null
 
 echo "[TASK 6] Set up kubernetes repo"
-# curl -fsSL https://pkgs.k8s.io/core:/stable:/v1.29/deb/Release.key | gpg --dearmor -o /etc/apt/keyrings/kubernetes-apt-keyring.gpg
-curl -fsSL https://pkgs.k8s.io/core:/stable:/v1.29/deb/Release.key | sudo gpg --dearmor -o /usr/share/keyrings/kubernetes-archive-keyring.gpg
-# echo 'deb [signed-by=/etc/apt/keyrings/kubernetes-apt-keyring.gpg] https://pkgs.k8s.io/core:/stable:/v1.29/deb/ /' > /etc/apt/sources.list.d/kubernetes.list
-echo 'deb [signed-by=/usr/share/keyrings/kubernetes-archive-keyring.gpg] https://pkgs.k8s.io/core:/stable:/v1.29/deb/ /' | sudo tee /etc/apt/sources.list.d/kubernetes.list
-apt-get update -qq >/dev/null
+curl -fsSL https://pkgs.k8s.io/core:/stable:/v1.29/deb/Release.key | gpg --dearmor -o /etc/apt/keyrings/kubernetes-apt-keyring.gpg
+echo 'deb [signed-by=/etc/apt/keyrings/kubernetes-apt-keyring.gpg] https://pkgs.k8s.io/core:/stable:/v1.29/deb/ /' > /etc/apt/sources.list.d/kubernetes.list
 
 echo "[TASK 7] Install Kubernetes components (kubeadm, kubelet and kubectl)"
 apt-get update -qq >/dev/null
@@ -59,13 +64,10 @@ apt-mark hold kubelet kubeadm kubectl
 
 echo "[TASK 8] Update /etc/hosts file"
 cat >>/etc/hosts<<EOF
-192.168.201.155  load-balancer hub.df.ggg.com.vn
+192.168.201.49  load-balancer hub.df.ggg.com.vn
 192.168.201.154  master-node-1
-192.168.201.49   master-node-2
-192.168.201.46   worker-node-1
-192.168.201.47   worker-node-2
-192.168.201.160  worker-node-3
-192.168.201.160  grafana.df.ggg.com.vn
-192.168.201.160  jenkins.df.ggg.com.vn
-192.168.201.160  rancher.df.ggg.com.vn  
+192.168.201.160  master-node-2
+192.168.201.45   worker-node-1
+192.168.201.158  worker-node-2
+192.168.201.132  worker-node-3 
 EOF
