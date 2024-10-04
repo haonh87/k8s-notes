@@ -97,9 +97,13 @@ COPY --from=composer:latest /usr/bin/composer /usr/bin/composer
 COPY configs/nginx/nginx.conf /etc/nginx/nginx.conf
 COPY configs/nginx/conf.d /etc/nginx/conf.d/
 
+# # #
 # CONFIGURE PHP-FPM
+# # #
 COPY configs/php/fpm-pool.conf /usr/local/etc/php-fpm.d/www.conf
-COPY configs/php.ini /usr/local/etc/php/conf.d/custom.ini
+COPY configs/php/php.ini /usr/local/etc/php/conf.d/custom.ini
+COPY configs/php/xdebug.ini /usr/local/etc/php/conf.d/xdebug.ini
+#COPY config/php/opcache.ini /usr/local/etc/php/conf.d/opcache.ini
 
 # CONFIGURE SUPERVISORD
 COPY configs/supervisord/supervisord.conf /etc/supervisor/conf.d/supervisord.conf
