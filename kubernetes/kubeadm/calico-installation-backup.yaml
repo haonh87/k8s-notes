@@ -1,0 +1,105 @@
+apiVersion: operator.tigera.io/v1
+kind: Installation
+metadata:
+  creationTimestamp: "2024-09-24T03:05:55Z"
+  finalizers:
+  - tigera.io/operator-cleanup
+  generation: 3
+  name: default
+  resourceVersion: "3761293"
+  uid: 22b5a5a6-2b60-45c2-9cd5-cf408e92df77
+spec:
+  calicoNetwork:
+    bgp: Enabled
+    containerIPForwarding: Enabled
+    hostPorts: Enabled
+    ipPools:
+    - blockSize: 26
+      cidr: 192.168.0.0/16
+      disableBGPExport: false
+      encapsulation: VXLANCrossSubnet
+      natOutgoing: Enabled
+      nodeSelector: all()
+    linuxDataplane: Iptables
+    multiInterfaceMode: None
+    nodeAddressAutodetectionV4:
+      firstFound: true
+    windowsDataplane: Disabled
+  cni:
+    ipam:
+      type: Calico
+    type: Calico
+  controlPlaneReplicas: 2
+  flexVolumePath: /usr/libexec/kubernetes/kubelet-plugins/volume/exec/
+  kubeletVolumePluginPath: /var/lib/kubelet
+  logging:
+    cni:
+      logFileMaxAgeDays: 30
+      logFileMaxCount: 10
+      logFileMaxSize: 100Mi
+      logSeverity: Info
+  nodeUpdateStrategy:
+    rollingUpdate:
+      maxUnavailable: 1
+    type: RollingUpdate
+  nonPrivileged: Disabled
+  variant: Calico
+status:
+  calicoVersion: v3.27.0
+  computed:
+    calicoNetwork:
+      bgp: Enabled
+      containerIPForwarding: Enabled
+      hostPorts: Enabled
+      ipPools:
+      - blockSize: 26
+        cidr: 192.168.0.0/16
+        disableBGPExport: false
+        encapsulation: VXLANCrossSubnet
+        natOutgoing: Enabled
+        nodeSelector: all()
+      linuxDataplane: Iptables
+      multiInterfaceMode: None
+      nodeAddressAutodetectionV4:
+        firstFound: true
+      windowsDataplane: Disabled
+    cni:
+      ipam:
+        type: Calico
+      type: Calico
+    controlPlaneReplicas: 2
+    flexVolumePath: /usr/libexec/kubernetes/kubelet-plugins/volume/exec/
+    kubeletVolumePluginPath: /var/lib/kubelet
+    logging:
+      cni:
+        logFileMaxAgeDays: 30
+        logFileMaxCount: 10
+        logFileMaxSize: 100Mi
+        logSeverity: Info
+    nodeUpdateStrategy:
+      rollingUpdate:
+        maxUnavailable: 1
+      type: RollingUpdate
+    nonPrivileged: Disabled
+    variant: Calico
+  conditions:
+  - lastTransitionTime: "2024-09-26T05:52:27Z"
+    message: All Objects Available
+    observedGeneration: 3
+    reason: AllObjectsAvailable
+    status: "False"
+    type: Progressing
+  - lastTransitionTime: "2024-09-26T05:52:27Z"
+    message: All Objects Available
+    observedGeneration: 3
+    reason: AllObjectsAvailable
+    status: "False"
+    type: Degraded
+  - lastTransitionTime: "2024-09-26T05:52:27Z"
+    message: All objects available
+    observedGeneration: 3
+    reason: AllObjectsAvailable
+    status: "True"
+    type: Ready
+  mtu: 1450
+  variant: Calico

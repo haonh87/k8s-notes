@@ -1,47 +1,60 @@
-# usage
-# docker build --no-cache -f Dockerfile -t haonh87/php:8.2-fpm-nginx .
+# Usage
+# docker build -f Dockerfile -t haonh87/laravel:php8.2 .
+# docker build --no-cache -f Dockerfile --build-arg PHP_VERSION=8.2 --build-arg ALPINE_VERSION=3.19 -t haonh87/php:8.2-fpm .
 
-ARG BASE_TAG=8.2-fpm-alpine
 
-FROM php:$BASE_TAG
+ARG PHP_VERSION=8.2
+ARG ALPINE_VERSION=3.19
+
+FROM php:${PHP_VERSION}-fpm-alpine${ALPINE_VERSION}
 
 LABEL maintainer="Hao Nguyen <haonh.87@gmail.com>"
 LABEL description="php-fpm alpine"
+
+
+
+ENV PHP_VERSION=${PHP_VERSION}
+# Extract the major version like "8" from "8.2
+ENV PHP_SHORT_VERSION=${PHP_VERSION%%.*}
+
+# # #
+# Proper iconv #240
+#   Ref: https://github.com/docker-library/php/issues/240
+# # #
+ENV LD_PRELOAD/usr/lib/preloadable_libiconv.so php
+RUN apk add --no-cache --repository http://dl-3.alpinelinux.org/alpine/edge/community gnu-libiconv
 
 # # #
 # INSTALL SYSTEM DEPENDENCES
 # # #
 RUN apk update && apk upgrade && \
     apk add --no-cache wget curl ca-certificates gcc \
-        tzdata \
-        s6 ssmtp \
-        bash \
-        linux-headers \
-        icu-dev \
-        libpng-dev \
-        libjpeg-turbo-dev \
-        libwebp-dev \
-        libxpm-dev \
-        libzip-dev \
-        oniguruma-dev \
-        libxml2-dev \
-        g++ \
-        make \
-        cmake \
-        autoconf \
-        openssl-dev \
-        postgresql-dev \
-        bzip2-dev \
-        imagemagick-dev \
-        libmcrypt-dev \
-        gmp-dev \
-        libxslt-dev \
-        zlib-dev \
-        nginx \
-        supervisor && \
-        rm /var/cache/apk/* && \
-        rm -Rf /etc/nginx/nginx.conf && \
-        rm -Rf /etc/nginx/conf.d/default.conf
+    supervisor \
+    tzdata \
+    s6 ssmtp \
+    bash \
+    linux-headers \
+    icu-dev \
+    libpng-dev \
+    libjpeg-turbo-dev \
+    libwebp-dev \
+    libxpm-dev \
+    libzip-dev \
+    oniguruma-dev \
+    libxml2-dev \
+    g++ \
+    make \
+    cmake \
+    autoconf \
+    openssl-dev \
+    postgresql-dev \
+    bzip2-dev \
+    imagemagick-dev \
+    libmcrypt-dev \
+    gmp-dev \
+    libxslt-dev \
+    zlib-dev
+
 
 # # #
 # PHP EXTENSIONS
@@ -89,32 +102,17 @@ RUN apk update && apk upgrade && \
 # # #
 COPY --from=composer:latest /usr/bin/composer /usr/bin/composer
 
-# # #
-# CONFIGURE NGINX
-# HTTP
-# Default server
-# # #
-COPY configs/nginx/nginx.conf /etc/nginx/nginx.conf
-COPY configs/nginx/conf.d /etc/nginx/conf.d/
 
-# CONFIGURE PHP-FPM
-COPY configs/php/fpm-pool.conf /usr/local/etc/php-fpm.d/www.conf
-COPY configs/php.ini /usr/local/etc/php/conf.d/custom.ini
-
-# CONFIGURE SUPERVISORD
-COPY configs/supervisord/supervisord.conf /etc/supervisor/conf.d/supervisord.conf
+###
+# COPY www.conf
+###
+COPY configs/supervisord/supervisord.conf /etc/supervisord.conf
 
 # SETUP DOCUMENT ROOT
-WORKDIR /var/www/html
+RUN mkdir -p /var/www/html
 
-# COPY SCRIPTS
-COPY ./start.sh /start.sh
-RUN chmod +x /start.sh
 
-# PORT 9003 FOR X-DEBUG
-EXPOSE 80 443 9003
+# SET THE WORK DIRECTORY.
+WORKDIR /var/www
 
-# FOR PHP-FPM
-#EXPOSE 9000
-
-CMD ["/start.sh"]
+CMD ["/usr/bin/supervisord", "-c", "/etc/supervisord.conf"]
