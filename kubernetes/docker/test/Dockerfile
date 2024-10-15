@@ -1,4 +1,4 @@
-FROM haonh87/php:8.2-fpm
+FROM haonh87/php:8.2-fpm-nginx
 
 ENV WORK_DIR /var/www/html
 
@@ -20,4 +20,4 @@ RUN cp ${WORK_DIR}/.env.example ${WORK_DIR}/.env
 # Generate key
 RUN php artisan key:generate
 
-EXPOSE 9000
+EXPOSE 80 443

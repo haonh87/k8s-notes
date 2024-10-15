@@ -1,0 +1,30 @@
+# Usage
+# docker build --no-cache  -f Dockerfile.grpc -t haonh87/php:8.1-grpc .
+FROM composer:2.7.9 AS vendor
+
+FROM ghcr.io/roadrunner-server/roadrunner:2024 AS roadrunner
+
+FROM haonh87/php:8.1-cli
+
+ARG UID
+ARG GID
+
+ENV UID=${UID:-1000}
+ENV GID=${GID:-1000}
+
+ENV WORKDIR=/var/www/html
+
+ENV USER=rr
+
+WORKDIR ${WORKDIR}
+
+RUN addgroup -g ${GID} --system ${USER} \
+    && adduser -g ${GID} --system -D -s /bin/sh -u ${UID} ${USER} \
+    && chown -R ${USER}:${USER} ${WORKDIR} /var/log /var/run \
+    && chmod -R a+rw ${WORKDIR} /var/log /var/run \
+    && cp ${PHP_INI_DIR}/php.ini-production ${PHP_INI_DIR}/php.ini
+
+USER ${USER}
+
+COPY --chown=${USER}:${USER} --from=vendor /usr/bin/composer /usr/bin/composer
+COPY --chown=${USER}:${USER} --from=roadrunner /usr/bin/rr /usr/local/bin/rr

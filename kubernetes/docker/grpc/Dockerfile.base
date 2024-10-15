@@ -1,0 +1,12 @@
+# Usage
+# docker build --no-cache -f Dockerfile.base -t haonh87/php:8.1-cli .
+FROM php:8.1-cli-alpine
+
+RUN apk update && apk upgrade && \
+    apk add git
+
+RUN curl -sSLf \
+        -o /usr/local/bin/install-php-extensions \
+        https://github.com/mlocati/docker-php-extension-installer/releases/latest/download/install-php-extensions && \
+    chmod +x /usr/local/bin/install-php-extensions && \
+    install-php-extensions opcache zip intl sockets grpc-1.66.0 protobuf-4.26.0 pcntl bcmath pdo_mysql gd
