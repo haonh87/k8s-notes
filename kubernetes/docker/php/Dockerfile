@@ -1,9 +1,10 @@
 # usage
-# docker build --no-cache -f Dockerfile -t haonh87/php:8.2-fpm-nginx .
+# docker build --no-cache -f Dockerfile -t haonh87/php:8.4-fpm-nginx .
 
-ARG BASE_TAG=8.2-fpm-alpine
+ARG PHP_FPM_IMAGE_BASE_TAG=8.4-fpm-alpine
+ARG LIBRDKAFKA_VERSION
 
-FROM php:$BASE_TAG
+FROM php:$PHP_FPM_IMAGE_BASE_TAG
 
 LABEL maintainer="Hao Nguyen <haonh.87@gmail.com>"
 LABEL description="php-fpm alpine"
@@ -12,77 +13,39 @@ LABEL description="php-fpm alpine"
 # INSTALL SYSTEM DEPENDENCES
 # # #
 RUN apk update && apk upgrade && \
-    apk add --no-cache wget curl ca-certificates gcc \
-        tzdata \
-        s6 ssmtp \
-        bash \
-        linux-headers \
-        icu-dev \
-        libpng-dev \
-        libjpeg-turbo-dev \
-        libwebp-dev \
-        libxpm-dev \
-        libzip-dev \
-        oniguruma-dev \
-        libxml2-dev \
-        g++ \
-        make \
-        cmake \
-        autoconf \
-        openssl-dev \
-        postgresql-dev \
-        bzip2-dev \
-        imagemagick-dev \
-        libmcrypt-dev \
-        gmp-dev \
-        libxslt-dev \
-        zlib-dev \
-        nginx \
-        supervisor && \
-        rm /var/cache/apk/* && \
+    apk add --no-cache \
+        wget curl ca-certificates gcc tzdata bash linux-headers icu-dev \
+        libpng-dev libjpeg-turbo-dev libwebp-dev libxpm-dev libzip-dev \
+        oniguruma-dev libxml2-dev g++ make cmake autoconf openssl-dev \
+        postgresql-dev bzip2-dev imagemagick-dev gmp-dev libxslt-dev \
+        zlib-dev nginx redis supervisor git && \
+    rm -rf /var/cache/apk/* && \
         rm -Rf /etc/nginx/nginx.conf && \
         rm -Rf /etc/nginx/conf.d/default.conf
 
 # # #
 # PHP EXTENSIONS
 # # #
-RUN docker-php-ext-configure gd --with-jpeg --with-webp \
-    && docker-php-ext-install -j$(nproc) gd \
-    intl \
-    zip \
-    pdo \
-    pdo_mysql \
-    pdo_pgsql \
-    pgsql \
-    mbstring \
-    exif
+RUN docker-php-ext-configure gd --with-jpeg --with-webp && \
+    docker-php-ext-install -j$(nproc) \
+        gd intl zip pdo pdo_mysql pdo_pgsql pgsql mbstring exif gmp pcntl \
+        bcmath xsl opcache bz2 session sockets && \
+    docker-php-ext-enable sockets && \
+    rm -rf /tmp/pear
 
-RUN docker-php-ext-configure gd --with-jpeg --with-webp \
-    && docker-php-ext-install -j$(nproc) gmp \
-    pcntl \
-    bcmath
+# Tải và cài đặt librdkafka 2.8.0 từ GitHub
+RUN curl -L -o /tmp/librdkafka.tar.gz https://github.com/confluentinc/librdkafka/archive/refs/tags/v2.7.0.tar.gz \
+    && tar -xvzf /tmp/librdkafka.tar.gz -C /tmp \
+    && cd /tmp/librdkafka-2.7.0 \
+    && ./configure \
+    && make \
+    && make install \
+    && rm -rf /tmp/librdkafka*
 
-RUN docker-php-ext-configure gd --with-jpeg --with-webp \
-    && docker-php-ext-install -j$(nproc) xsl
+# Cài đặt PHP extension rdkafka qua PECL
+RUN pecl install rdkafka \
+    && docker-php-ext-enable rdkafka
 
-RUN docker-php-ext-configure gd --with-jpeg --with-webp \
-    && docker-php-ext-install -j$(nproc) opcache
-
-RUN docker-php-ext-configure gd --with-jpeg --with-webp \
-    && docker-php-ext-install -j$(nproc) bz2
-
-RUN docker-php-ext-configure gd --with-jpeg --with-webp \
-    && docker-php-ext-install -j$(nproc) session
-    
-
-RUN apk update && apk upgrade && \
-    apk add --no-cache linux-headers \
-    && docker-php-ext-install sockets \
-    && docker-php-ext-enable sockets \
-    && pecl install imagick \
-    && docker-php-ext-enable imagick \
-    && pecl install mcrypt \
-    && docker-php-ext-enable mcrypt
 
 # # #
 #  INSTALL COMPOSER
